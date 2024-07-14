@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # Update package lists
-sudo apt-get update -y
-sudo apt-get -y upgrade
+apt-get update -y
+apt-get -y upgrade
 # Install Nginx if not already installed
 if ! command -v nginx &> /dev/null
 then
-	sudo apt-get install -y nginx
+	apt-get install -y nginx
 fi
 # Create the required directories
-sudo mkdir -p /data/web_static/releases/test/
-sudo mkdir -p /data/web_static/shared/
+mkdir -p /data/web_static/releases/test/
+mkdir -p /data/web_static/shared/
 # Create a fake HTML file
 echo "<html>
   <head>
@@ -18,9 +18,10 @@ echo "<html>
     Holberton School
   </body>
 </html>" > /data/web_static/releases/test/index.html
-sudo ln -sf /data/web_static/releases/test/ /data/web_static/current
+ln -sf /data/web_static/releases/test/ /data/web_static/current
 # Give ownership of /data/ folder to ubuntu user and group
-sudo chown -R ubuntu:ubuntu /data/i
+chown -R ubuntu:ubuntu /data/
+chgrp -R ubuntu /data/
 # Update the Nginx configuration
 CONFIG="server {
     listen 80 default_server;
@@ -33,16 +34,23 @@ CONFIG="server {
 
     location /hbnb_static/ {
         alias /data/web_static/current/;
+        index index.html index.htm;
     }
 
-    location / {
-        try_files \$uri \$uri/ =404;
+    location /redirect_me {
+        return 301 http://cuberule.com/;
+    }
+
+    error_page 404 /404.html;
+    location /404 {
+      root /var/www/html;
+      internal;
     }
 }"
 
 echo "$CONFIG" > /etc/nginx/sites-available/default
 
 # Restart Nginx to apply the changes
-sudo service nginx restart
+service nginx restart
 
 exit 0
